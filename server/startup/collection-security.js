@@ -10,7 +10,6 @@ const {
   Packages,
   Emails,
   Jobs,
-  Media,
   Orders,
   Products,
   Shipping,
@@ -123,16 +122,6 @@ export default function () {
     .allowInClientCode();
 
   /*
-   * Permissive security for users with the "admin" role for FS.Collections
-   */
-
-  Security.permit(["insert", "update", "remove"])
-    .collections([Media])
-    .ifHasRoleForActiveShop({ role: ["admin", "owner", "createProduct"] })
-    .ifFileBelongsToShop()
-    .allowInClientCode();
-
-  /*
    * Users with the "admin" or "owner" role may update and
    * remove their shop but may not insert one.
    */
@@ -183,15 +172,6 @@ export default function () {
     .ifHasRoleForActiveShop({ role: ["anonymous", "guest"] })
     .ifUserIdMatches()
     .allowInClientCode();
-
-  /*
-   * apply download permissions to file collections
-   */
-  _.each([Media], (fsCollection) => fsCollection.allow({
-    download() {
-      return true;
-    }
-  }));
 
   /**
    * Emails - Deny all client side ops

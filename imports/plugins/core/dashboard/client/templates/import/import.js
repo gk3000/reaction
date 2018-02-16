@@ -1,7 +1,8 @@
 import { Template } from "meteor/templating";
 import { Meteor } from "meteor/meteor";
 import { Reaction } from "/client/api";
-import { Media, Products } from "/lib/collections";
+import { Products } from "/lib/collections";
+import { Media } from "/imports/plugins/core/files/client";
 
 function uploadHandler(event) {
   const shopId = Reaction.getShopId();

@@ -5,36 +5,33 @@ import update from "react/lib/update";
 import { compose } from "recompose";
 import { registerComponent, composeWithTracker } from "@reactioncommerce/reaction-components";
 import _ from "lodash";
+import { FileRecord } from "@reactioncommerce/file-collections";
 import { Meteor } from "meteor/meteor";
 import MediaGallery from "../components/media/mediaGallery";
-import { Reaction } from "/client/api";
+import { Logger, Reaction } from "/client/api";
 import { ReactionProduct } from "/lib/api";
-import { Media, Revisions } from "/lib/collections";
+import { Revisions } from "/lib/collections";
+import { Media } from "/imports/plugins/core/files/client";
 
 function uploadHandler(files) {
-  // TODO: It would be cool to move this logic to common ValidatedMethod, but
-  // I can't find a way to do this, because of browser's `FileList` collection
-  // and it `Blob`s which is our event.target.files.
-  // There is a way to do this: http://stackoverflow.com/a/24003932. but it's too
-  // tricky
   const productId = ReactionProduct.selectedProductId();
   const variant = ReactionProduct.selectedVariant();
   if (typeof variant !== "object") {
-    return Alerts.add("Please, create new Variant first.", "danger", {
-      autoHide: true
-    });
+    return Alerts.add("Select a variant", "danger", { autoHide: true });
   }
   const variantId = variant._id;
   const shopId = ReactionProduct.selectedProduct().shopId || Reaction.getShopId();
   const userId = Meteor.userId();
-  let count = Media.find({
+  let count = Media.findLocal({
     "metadata.variantId": variantId
-  }).count();
+  }).length;
 
   for (const file of files) {
-    const fileObj = new FS.File(file);
+    // Convert it to a FileRecord
+    const fileRecord = FileRecord.fromFile(file);
 
-    fileObj.metadata = {
+    // Set metadata
+    fileRecord.metadata = {
       ownerId: userId,
       productId,
       variantId,
@@ -43,11 +40,21 @@ function uploadHandler(files) {
       toGrid: 1 // we need number
     };
 
-    Media.insert(fileObj);
     count += 1;
-  }
 
-  return true;
+    // Listen for upload progress events
+    // fileRecord.on("uploadProgress", (info) => {
+    //   console.info(info);
+    // });
+
+    // Do the upload. chunkSize is optional and defaults to 5MB
+    fileRecord.upload({})
+      // We insert only AFTER the server has confirmed that all chunks were uploaded
+      .then(() => Media.insert(fileRecord))
+      .catch((error) => {
+        Logger.error(error);
+      });
+  }
 }
 
 const wrapComponent = (Comp) => (
@@ -79,12 +86,8 @@ const wrapComponent = (Comp) => (
       });
     }
 
-    handleDrop = (files) => {
-      uploadHandler(files);
-    }
-
     handleRemoveMedia = (media) => {
-      const imageUrl = media.url();
+      const imageUrl = media.url({ store: "medium" });
       const mediaId = media._id;
 
       Alerts.alert({
@@ -95,7 +98,7 @@ const wrapComponent = (Comp) => (
         imageHeight: 150
       }, (isConfirm) => {
         if (isConfirm) {
-          Media.remove({ _id: mediaId }, (error) => {
+          Media.remove(mediaId, (error) => {
             if (error) {
               Alerts.toast(error.reason, "warning", {
                 autoHide: 10000
@@ -171,13 +174,12 @@ const wrapComponent = (Comp) => (
             this.setState({ dimensions: contentRect.bounds });
           }}
         >
-
           {({ measureRef }) =>
             <div ref={measureRef}>
               <Comp
                 allowFeaturedMediaHover={this.allowFeaturedMediaHover}
                 featuredMedia={this.state.featuredMedia}
-                onDrop={this.handleDrop}
+                onDrop={uploadHandler}
                 onMouseEnterMedia={this.handleMouseEnterMedia}
                 onMouseLeaveMedia={this.handleMouseLeaveMedia}
                 onMoveMedia={this.handleMoveMedia}
@@ -209,7 +211,7 @@ function fetchMediaRevisions() {
 
 // resort the media in
 function sortMedia(media) {
-  const sortedMedia = _.sortBy(media, (m) => m.metadata.priority);
+  const sortedMedia = _.sortBy(media, (m) => (m.metadata && m.metadata.priority) || 1000);
   return sortedMedia;
 }
 

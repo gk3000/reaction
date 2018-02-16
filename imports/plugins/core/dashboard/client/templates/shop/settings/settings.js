@@ -3,7 +3,8 @@ import { Meteor } from "meteor/meteor";
 import { Template } from "meteor/templating";
 import { AutoForm } from "meteor/aldeed:autoform";
 import { Reaction, i18next } from "/client/api";
-import { Media, Packages, Shops } from "/lib/collections";
+import { MediaRecords, Packages, Shops } from "/lib/collections";
+import { Media } from "/imports/plugins/core/files/client";
 
 Template.shopBrandImageOption.helpers({
   cardProps(data) {
@@ -48,7 +49,7 @@ Template.shopBrandImageOption.helpers({
             showCancelButton: true,
             confirmButtonText: "Remove"
           }, () => {
-            Media.findOne(data.option._id).remove();
+            Media.remove(data.option._id).catch((error) => { console.error(error); });
           });
         }
       });
@@ -78,7 +79,7 @@ Template.shopSettings.helpers({
   brandImageSelectProps() {
     const shopId = Reaction.getShopId();
 
-    const media = Media.find({
+    const media = MediaRecords.find({
       "metadata.shopId": shopId,
       "metadata.type": "brandAsset"
     });

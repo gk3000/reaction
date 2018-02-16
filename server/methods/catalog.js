@@ -5,8 +5,9 @@ import { EJSON } from "meteor/ejson";
 import { Meteor } from "meteor/meteor";
 import { copyFile, ReactionProduct } from "/lib/api";
 import { ProductRevision as Catalog } from "/imports/plugins/core/revisions/server/hooks";
-import { Media, Products, Revisions, Tags } from "/lib/collections";
+import { Products, Revisions, Tags } from "/lib/collections";
 import { Logger, Reaction } from "/server/api";
+import { Media } from "/imports/plugins/core/files/server";
 
 /* eslint new-cap: 0 */
 /* eslint no-loop-func: 0 */

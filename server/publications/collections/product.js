@@ -1,6 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { check, Match } from "meteor/check";
-import { Media, Products, Revisions, Shops } from "/lib/collections";
+import { MediaRecords, Products, Revisions, Shops } from "/lib/collections";
 import { Logger, Reaction } from "/server/api";
 import { RevisionApi } from "/imports/plugins/core/revisions/lib/api/revisions";
 
@@ -40,7 +40,7 @@ export function findProductMedia(publicationInstance, productIds) {
   // TODO: We should differentiate between the media selector for the product grid and PDP
   // The grid shouldn't need more than one Media document per product, while the PDP will need
   // all the images associated with the
-  return Media.find(selector, {
+  return MediaRecords.find(selector, {
     sort: {
       "metadata.priority": 1
     }

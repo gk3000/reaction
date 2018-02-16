@@ -1,7 +1,7 @@
 import { Meteor } from "meteor/meteor";
-import { Media } from "/lib/collections";
+import { MediaRecords } from "/lib/collections";
 
 /**
  * CollectionFS - Brand asset publication
   */
-Meteor.publish("BrandAssets", () => Media.find({ "metadata.type": "brandAsset" }));
+Meteor.publish("BrandAssets", () => MediaRecords.find({ "metadata.type": "brandAsset" }));

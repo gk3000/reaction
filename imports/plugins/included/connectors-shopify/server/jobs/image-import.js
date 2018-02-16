@@ -1,4 +1,5 @@
-import { Jobs, Media } from "/lib/collections";
+import { Jobs } from "/lib/collections";
+import { Media } from "/imports/plugins/core/files/server";
 
 export const importImages = () => {
   Jobs.processJobs("connectors/shopify/import/image", {
